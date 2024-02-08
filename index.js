@@ -93,3 +93,4 @@ for (let i = 0; i < process.env.LESSONS; i++) {
 
   console.log({ xp: response.xpGain })
 }
+
