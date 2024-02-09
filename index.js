@@ -17,7 +17,7 @@ const { fromLanguage, learningLanguage, xpGains } = await fetch(
 ).then((response) => response.json());
 
 // Calculate target XP
-const targetXP = parseInt(process.env.TARGET_XP);; 
+const targetXP = parseInt(process.env.TARGET_XP);
 
 let totalXP = 0;
 let lessonsCompleted = 0;
@@ -100,6 +100,8 @@ while (totalXP < targetXP) {
   totalXP += response.xpGain;
   lessonsCompleted++;
 
+  console.log(`Current XP: ${totalXP}`);
+  console.log(`Total XP remaining: ${targetXP - totalXP}`);
   console.log({ xp: response.xpGain });
 }
 
