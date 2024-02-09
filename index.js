@@ -99,6 +99,7 @@ while (totalXP < targetXP) {
 
   totalXP += response.xpGain;
   lessonsCompleted++;
+  console.clear();
   console.log(`XP Gained: ${response.xpGain}`);
   console.log(`Current XP: ${totalXP}`);
   console.log(`Total XP remaining: ${targetXP - totalXP}`);
