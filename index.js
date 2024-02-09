@@ -9,114 +9,98 @@ const { sub } = JSON.parse(
   Buffer.from(process.env.DUOLINGO_JWT.split(".")[1], "base64").toString()
 );
 
-const userResponse = fetch(
+const { fromLanguage, learningLanguage, xpGains } = await fetch(
   `https://www.duolingo.com/2017-06-30/users/${sub}?fields=fromLanguage,learningLanguage,xpGains`,
   {
     headers,
   }
-);
+).then((response) => response.json());
 
-userResponse
-  .then((response) => {
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch user data: ${response.status} - ${response.statusText}`
-      );
+// Calculate target XP
+const targetXP = parseInt(process.env.TARGET_XP);; 
+
+let totalXP = 0;
+let lessonsCompleted = 0;
+
+while (totalXP < targetXP) {
+  const session = await fetch("https://www.duolingo.com/2017-06-30/sessions", {
+    body: JSON.stringify({
+      challengeTypes: [
+        "assist",
+        "characterIntro",
+        "characterMatch",
+        "characterPuzzle",
+        "characterSelect",
+        "characterTrace",
+        "completeReverseTranslation",
+        "definition",
+        "dialogue",
+        "form",
+        "freeResponse",
+        "gapFill",
+        "judge",
+        "listen",
+        "listenComplete",
+        "listenMatch",
+        "match",
+        "name",
+        "listenComprehension",
+        "listenIsolation",
+        "listenTap",
+        "partialListen",
+        "partialReverseTranslate",
+        "readComprehension",
+        "select",
+        "selectPronunciation",
+        "selectTranscription",
+        "syllableTap",
+        "syllableListenTap",
+        "speak",
+        "tapCloze",
+        "tapClozeTable",
+        "tapComplete",
+        "tapCompleteTable",
+        "tapDescribe",
+        "translate",
+        "typeCloze",
+        "typeClozeTable",
+        "typeCompleteTable",
+      ],
+      fromLanguage,
+      isFinalLevel: false,
+      isV2: true,
+      juicy: true,
+      learningLanguage,
+      skillId: xpGains.find((xpGain) => xpGain.skillId).skillId,
+      smartTipsVersion: 2,
+      type: "SPEAKING_PRACTICE",
+    }),
+    headers,
+    method: "POST",
+  }).then((response) => response.json());
+
+  const response = await fetch(
+    `https://www.duolingo.com/2017-06-30/sessions/${session.id}`,
+    {
+      body: JSON.stringify({
+        ...session,
+        heartsLeft: 0,
+        startTime: (+new Date() - 60000) / 1000,
+        enableBonusPoints: false,
+        endTime: +new Date() / 1000,
+        failed: false,
+        maxInLessonStreak: 9,
+        shouldLearnThings: true,
+      }),
+      headers,
+      method: "PUT",
     }
-    return response.json();
-  })
-  .then(({ fromLanguage, learningLanguage, xpGains }) => {
-    // Target XP for the number of lessons
-    const targetXP = parseInt(process.env.TARGET_XP);
+  ).then((response) => response.json());
 
-    let currentXP = 0;
-    let totalXP = targetXP;
+  totalXP += response.xpGain;
+  lessonsCompleted++;
 
-    function fetchSession() {
-      fetch("https://www.duolingo.com/2017-06-30/sessions", {
-        body: JSON.stringify({
-          challengeTypes: [
-            "assist",
-            "characterIntro",
-            "characterMatch",
-            "characterPuzzle",
-            "characterSelect",
-            "characterTrace",
-            "completeReverseTranslation",
-            "definition",
-            "dialogue",
-            "form",
-            "freeResponse",
-            "gapFill",
-            "judge",
-            "listen",
-            "listenComplete",
-            "listenMatch",
-            "match",
-            "name",
-            "listenComprehension",
-            "listenIsolation",
-            "listenTap",
-            "partialListen",
-            "partialReverseTranslate",
-            "readComprehension",
-            "select",
-            "selectPronunciation",
-            "selectTranscription",
-            "syllableTap",
-            "syllableListenTap",
-            "speak",
-            "tapCloze",
-            "tapClozeTable",
-            "tapComplete",
-            "tapCompleteTable",
-            "tapDescribe",
-            "translate",
-            "typeCloze",
-            "typeClozeTable",
-            "typeCompleteTable",
-          ],
-          fromLanguage,
-          isFinalLevel: false,
-          isV2: true,
-          juicy: true,
-          learningLanguage,
-          skillId: xpGains.find((xpGain) => xpGain.skillId).skillId,
-          smartTipsVersion: 2,
-          type: "SPEAKING_PRACTICE",
-        }),
-        headers,
-        method: "POST",
-      })
-        .then((sessionResponse) => {
-          if (!sessionResponse.ok) {
-            console.error(
-              `Failed to fetch session data: ${sessionResponse.status} - ${sessionResponse.statusText}`
-            );
-            throw new Error("Failed to fetch session data");
-          }
-          return sessionResponse.json();
-        })
-        .then((session) => {
-          const xpGain = session.xpGain || 0;
-          currentXP += xpGain;
-          totalXP = targetXP - currentXP;
+  console.log({ xp: response.xpGain });
+}
 
-          console.log(
-            `Current XP: ${currentXP}, Total XP Remaining: ${totalXP}`
-          );
-
-          if (currentXP < targetXP) {
-            fetchSession();
-          }
-        })
-        .catch((error) => {
-          console.error("An error occurred:", error);
-        });
-    }
-
-    fetchSession();
-  })
-  .catch((error) => {
-    console.error("An error occurred:", error);
-  });
+console.log(`Target XP reached after completing ${lessonsCompleted} lessons.`);
