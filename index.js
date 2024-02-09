@@ -104,4 +104,8 @@ while (currentXP < targetXP) {
   totalXP = targetXP - currentXP;
 
   console.log(`Current XP: ${currentXP}, Total XP Remaining: ${totalXP}`);
+
+  if (currentXP >= targetXP) {
+    break;
+  }
 }
