@@ -9,12 +9,13 @@ const { sub } = JSON.parse(
   Buffer.from(process.env.DUOLINGO_JWT.split(".")[1], "base64").toString()
 );
 
-const { fromLanguage, learningLanguage, xpGains } = await fetch(
+const userResponse = await fetch(
   `https://www.duolingo.com/2017-06-30/users/${sub}?fields=fromLanguage,learningLanguage,xpGains`,
   {
     headers,
   }
-).then((response) => response.json());
+);
+const { fromLanguage, learningLanguage, xpGains } = await userResponse.json();
 
 // Target XP for the number of lessons
 const targetXP = parseInt(process.env.TARGET_XP);
@@ -23,61 +24,66 @@ let currentXP = 0;
 let totalXP = targetXP;
 
 while (currentXP < targetXP) {
-  const session = await fetch("https://www.duolingo.com/2017-06-30/sessions", {
-    body: JSON.stringify({
-      challengeTypes: [
-        "assist",
-        "characterIntro",
-        "characterMatch",
-        "characterPuzzle",
-        "characterSelect",
-        "characterTrace",
-        "completeReverseTranslation",
-        "definition",
-        "dialogue",
-        "form",
-        "freeResponse",
-        "gapFill",
-        "judge",
-        "listen",
-        "listenComplete",
-        "listenMatch",
-        "match",
-        "name",
-        "listenComprehension",
-        "listenIsolation",
-        "listenTap",
-        "partialListen",
-        "partialReverseTranslate",
-        "readComprehension",
-        "select",
-        "selectPronunciation",
-        "selectTranscription",
-        "syllableTap",
-        "syllableListenTap",
-        "speak",
-        "tapCloze",
-        "tapClozeTable",
-        "tapComplete",
-        "tapCompleteTable",
-        "tapDescribe",
-        "translate",
-        "typeCloze",
-        "typeClozeTable",
-        "typeCompleteTable",
-      ],
-      fromLanguage,
-      isFinalLevel: false,
-      isV2: true,
-      juicy: true,
-      learningLanguage,
-      skillId: xpGains.find((xpGain) => xpGain.skillId).skillId,
-      smartTipsVersion: 2,
-      type: "SPEAKING_PRACTICE",
-    }),
-    headers,
-    method: "POST",
-  }).then((response) => response.json());
+  const sessionResponse = await fetch(
+    "https://www.duolingo.com/2017-06-30/sessions",
+    {
+      body: JSON.stringify({
+        challengeTypes: [
+          "assist",
+          "characterIntro",
+          "characterMatch",
+          "characterPuzzle",
+          "characterSelect",
+          "characterTrace",
+          "completeReverseTranslation",
+          "definition",
+          "dialogue",
+          "form",
+          "freeResponse",
+          "gapFill",
+          "judge",
+          "listen",
+          "listenComplete",
+          "listenMatch",
+          "match",
+          "name",
+          "listenComprehension",
+          "listenIsolation",
+          "listenTap",
+          "partialListen",
+          "partialReverseTranslate",
+          "readComprehension",
+          "select",
+          "selectPronunciation",
+          "selectTranscription",
+          "syllableTap",
+          "syllableListenTap",
+          "speak",
+          "tapCloze",
+          "tapClozeTable",
+          "tapComplete",
+          "tapCompleteTable",
+          "tapDescribe",
+          "translate",
+          "typeCloze",
+          "typeClozeTable",
+          "typeCompleteTable",
+        ],
+        fromLanguage,
+        isFinalLevel: false,
+        isV2: true,
+        juicy: true,
+        learningLanguage,
+        skillId: xpGains.find((xpGain) => xpGain.skillId).skillId,
+        smartTipsVersion: 2,
+        type: "SPEAKING_PRACTICE",
+      }),
+      headers,
+      method: "POST",
+    }
+  );
+
+  const session = await sessionResponse.json();
 
   const xpGain = session.xpGain || 0;
   currentXP += xpGain;
