@@ -15,6 +15,13 @@ const userResponse = await fetch(
     headers,
   }
 );
+
+if (!userResponse.ok) {
+  throw new Error(
+    `Failed to fetch user data: ${userResponse.status} - ${userResponse.statusText}`
+  );
+}
+
 const { fromLanguage, learningLanguage, xpGains } = await userResponse.json();
 
 // Target XP for the number of lessons
@@ -82,6 +89,13 @@ while (currentXP < targetXP) {
       method: "POST",
     }
   );
+
+  if (!sessionResponse.ok) {
+    console.error(
+      `Failed to fetch session data: ${sessionResponse.status} - ${sessionResponse.statusText}`
+    );
+    break; // Exit the loop if the request failed
+  }
 
   const session = await sessionResponse.json();
 
