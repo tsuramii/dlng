@@ -16,16 +16,13 @@ const { fromLanguage, learningLanguage, xpGains } = await fetch(
   }
 ).then((response) => response.json());
 
+// Target XP for the number of lessons
 const targetXP = parseInt(process.env.TARGET_XP);
-
-const xpPerLesson = 20;
-
-const lessonsNeeded = Math.ceil(targetXP / xpPerLesson);
 
 let currentXP = 0;
 let totalXP = targetXP;
 
-for (let i = 0; i < lessonsNeeded; i++) {
+while (currentXP < targetXP) {
   const session = await fetch("https://www.duolingo.com/2017-06-30/sessions", {
     body: JSON.stringify({
       challengeTypes: [
@@ -82,8 +79,9 @@ for (let i = 0; i < lessonsNeeded; i++) {
     method: "POST",
   }).then((response) => response.json());
 
-  currentXP += xpPerLesson;
-  totalXP -= xpPerLesson;
+  const xpGain = session.xpGain || 0;
+  currentXP += xpGain;
+  totalXP = targetXP - currentXP;
 
   console.log(`Current XP: ${currentXP}, Total XP Remaining: ${totalXP}`);
 }
