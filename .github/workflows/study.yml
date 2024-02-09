@@ -3,9 +3,9 @@ name: Do a Duolingo lesson
 on:
   workflow_dispatch:
     inputs:
-      lessons:
-        default: 1
-        description: 'Number of lessons to be done'
+      target_xp:
+        default: 100
+        description: 'Target XP for the number of lessons'
         required: false
         type: number
 
@@ -22,4 +22,4 @@ jobs:
       - run: node index.js
         env:
           DUOLINGO_JWT: ${{ secrets.DUOLINGO_JWT }}
-          LESSONS: ${{ inputs.lessons }}
+          TARGET_XP: ${{ inputs.target_xp }}
